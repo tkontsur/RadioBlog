@@ -28,7 +28,7 @@ class BlogServiceImplTest extends BaseSpringTest {
     @Test
     public void createBlog() {
         BlogDTO blogDTO = new BlogDTO(0, "test", user.getId());
-        BlogDTO createdBlog = blogService.addBlog(blogDTO);
+        BlogDTO createdBlog = blogService.upsertBlog(blogDTO);
 
         assertNotNull(createdBlog);
         assertEquals(blogDTO.title(), createdBlog.title());
@@ -45,11 +45,11 @@ class BlogServiceImplTest extends BaseSpringTest {
     @Test
     public void editBlog() {
         BlogDTO blogDTO = new BlogDTO(0, "test", user.getId());
-        BlogDTO createdBlog = blogService.addBlog(blogDTO);
+        BlogDTO createdBlog = blogService.upsertBlog(blogDTO);
         assertNotNull(createdBlog);
 
         BlogDTO editedBlog = new BlogDTO(createdBlog.id(), "edited", user.getId());
-        BlogDTO updatedBlog = blogService.addBlog(editedBlog);
+        BlogDTO updatedBlog = blogService.upsertBlog(editedBlog);
         assertEquals(updatedBlog.id(), createdBlog.id());
         assertEquals(updatedBlog.title(),
                 userRepository.findById(user.getId()).orElseThrow().getBlog().getTitle());
@@ -58,9 +58,9 @@ class BlogServiceImplTest extends BaseSpringTest {
     @Test
     public void createBlogWithInvalidOwnerId() {
         BlogDTO blogDTO = new BlogDTO(0, "test", user.getId());
-        blogService.addBlog(blogDTO);
+        blogService.upsertBlog(blogDTO);
 
         assertThrows(IllegalArgumentException.class,
-                () -> blogService.addBlog(new BlogDTO(0, blogDTO.title(), blogDTO.ownerId())));
+                () -> blogService.upsertBlog(new BlogDTO(0, blogDTO.title(), blogDTO.ownerId())));
     }
 }

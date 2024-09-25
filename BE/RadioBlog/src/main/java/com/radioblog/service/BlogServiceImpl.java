@@ -24,7 +24,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public BlogDTO addBlog(BlogDTO blogDTO) {
+    public BlogDTO upsertBlog(BlogDTO blogDTO) {
         logger.debug("Creating blog with title: {}", blogDTO.title());
         User user = userRepository.findById(blogDTO.ownerId()).orElseThrow(EntityNotFoundException::new);
 
