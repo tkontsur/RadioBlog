@@ -33,6 +33,14 @@ public class Blog {
     @OneToMany(mappedBy = "blog")
     private List<BlogSubscription> subscriptions = new ArrayList<>();
 
+    public Blog() {
+    }
+
+    public Blog(String title, User owner) {
+        this.title = title;
+        this.owner = owner;
+    }
+
     public Long getId() {
         return id;
     }
@@ -84,8 +92,6 @@ public class Blog {
                 "id=" + id +
                 ", title='" + title + '\'' +
                 ", owner=" + owner +
-                ", posts=" + posts +
-                ", subscriptions=" + subscriptions +
                 '}';
     }
 }

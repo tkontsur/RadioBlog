@@ -1,24 +1,16 @@
 package com.radioblog.service;
 
+import com.radioblog.BaseSpringTest;
 import com.radioblog.dto.UserDTO;
 import com.radioblog.entity.User;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
-@ActiveProfiles("test")
-class UserServiceTest {
+class UserServiceImplTest extends BaseSpringTest {
     @Autowired
     private UserService userService;
-
-    @BeforeEach
-    void setUp() {
-    }
 
     @Test
     void isUsernameAvailable() {
