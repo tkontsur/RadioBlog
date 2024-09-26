@@ -8,6 +8,7 @@ import com.radioblog.repository.BlogRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +25,7 @@ public class BlogPostsServiceImpl implements BlogPostsService {
     }
 
     @Override
+    @Transactional
     public BlogPostDTO upsertPost(BlogPostDTO blogPostDTO) {
         Blog blog = blogRepository.findById(blogPostDTO.blogId()).orElseThrow(EntityNotFoundException::new);
 
@@ -41,6 +43,7 @@ public class BlogPostsServiceImpl implements BlogPostsService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BlogPostDTO> getPostsByBlogId(long blogId) {
         return blogPostsRepository.findAllByBlogId(blogId).stream()
                 .map(blogPost -> new BlogPostDTO(blogPost.getId(), blogPost.getTitle(), blogPost.getContent(),

@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BlogServiceImpl implements BlogService {
@@ -24,6 +25,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @Transactional
     public BlogDTO upsertBlog(BlogDTO blogDTO) {
         logger.debug("Creating blog with title: {}", blogDTO.title());
         User user = userRepository.findById(blogDTO.ownerId()).orElseThrow(EntityNotFoundException::new);
@@ -48,6 +50,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BlogDTO getBlog(long id) {
         Blog blog = blogRepository.findById(id).orElseThrow(EntityNotFoundException::new);
         return new BlogDTO(blog.getId(), blog.getTitle(), blog.getOwner().getId());
