@@ -17,11 +17,14 @@ import java.util.stream.Collectors;
 public class BlogPostsServiceImpl implements BlogPostsService {
     private final BlogPostsRepository blogPostsRepository;
     private final BlogRepository blogRepository;
+    private final AwsCommunicationService awsCommunicationService;
 
     @Autowired
-    public BlogPostsServiceImpl(BlogPostsRepository blogPostsRepository, BlogRepository blogRepository) {
+    public BlogPostsServiceImpl(BlogPostsRepository blogPostsRepository, BlogRepository blogRepository,
+                                AwsCommunicationService awsCommunicationService) {
         this.blogPostsRepository = blogPostsRepository;
         this.blogRepository = blogRepository;
+        this.awsCommunicationService = awsCommunicationService;
     }
 
     @Override
@@ -31,12 +34,13 @@ public class BlogPostsServiceImpl implements BlogPostsService {
 
         BlogPost blogPost = blogPostDTO.id() > 0
                 ? blogPostsRepository.findById(blogPostDTO.id()).orElseThrow(EntityNotFoundException::new)
-                : new BlogPost()
-                    .setTitle(blogPostDTO.title())
-                    .setContent(blogPostDTO.content())
-                    .setBlog(blog);
+                : new BlogPost().setBlog(blog);
+
+        blogPost.setTitle(blogPostDTO.title())
+                .setContent(blogPostDTO.content());
 
         blogPost = blogPostsRepository.save(blogPost);
+        awsCommunicationService.enqueueMp3FileGeneration(blogPost.getId());
 
         return new BlogPostDTO(blogPost.getId(), blogPost.getTitle(), blogPost.getContent(), blogPost.getMp3Url(),
                 blog.getId());
