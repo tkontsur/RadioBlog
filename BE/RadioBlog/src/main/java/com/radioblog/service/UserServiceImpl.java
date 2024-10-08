@@ -1,13 +1,15 @@
 package com.radioblog.service;
 
-import com.radioblog.controller.ResponseException;
 import com.radioblog.dto.LoginUserDTO;
 import com.radioblog.dto.UserDTO;
 import com.radioblog.entity.User;
 import com.radioblog.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,6 +22,7 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -28,6 +31,7 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
     private final SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+    private final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
 
     @Autowired
@@ -47,16 +51,17 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void saveUser(User newUser) {
         if (!isUsernameAvailable(newUser.getUsername())) {
-            throw new ResponseException(409, "Username is already taken");
+            throw new ResponseStatusException(HttpStatusCode.valueOf(409), "Username is already taken");
         }
 
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
-
+        logger.debug("Saving user {}", newUser);
         userRepository.save(newUser);
     }
 
     @Override
     public UserDTO login(LoginUserDTO userDTO, HttpServletRequest request, HttpServletResponse response) {
+        logger.debug("Logging in user {}", userDTO.username());
         Authentication authenticationRequest =
                 UsernamePasswordAuthenticationToken.unauthenticated(userDTO.username(), userDTO.password());
         Authentication authentication =
@@ -69,6 +74,7 @@ public class UserServiceImpl implements UserService {
         Object principal = authentication.getPrincipal();
 
         if (principal instanceof User user) {
+            logger.debug("User logged in: {}", user);
             return new UserDTO(user.getId(), user.getUsername(), user.getRole().toString());
         }
 

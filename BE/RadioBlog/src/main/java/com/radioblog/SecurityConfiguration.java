@@ -37,6 +37,7 @@ public class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(frontendUrl));
         configuration.setAllowedMethods(List.of(CorsConfiguration.ALL));
+        configuration.addAllowedHeader(CorsConfiguration.ALL);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -65,6 +66,7 @@ public class SecurityConfiguration {
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsService)
+                .cors(customizer -> customizer.configurationSource(corsConfigurationSource()))
                 .build();
     }
 }
