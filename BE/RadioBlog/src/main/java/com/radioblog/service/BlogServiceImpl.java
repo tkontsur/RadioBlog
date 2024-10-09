@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class BlogServiceImpl implements BlogService {
     private final BlogRepository blogRepository;
@@ -46,13 +48,22 @@ public class BlogServiceImpl implements BlogService {
         logger.debug("Updating user role to AUTHOR: {}", user);
         user = userRepository.save(user);
         Blog blog = user.getBlog();
-        return new BlogDTO(blog.getId(), blog.getTitle(), user.getId());
+        return new BlogDTO(blog.getId(), blog.getTitle(), user.getId(), user.getUsername());
     }
 
     @Override
     @Transactional(readOnly = true)
     public BlogDTO getBlog(long id) {
         Blog blog = blogRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        return new BlogDTO(blog.getId(), blog.getTitle(), blog.getOwner().getId());
+        return new BlogDTO(blog.getId(), blog.getTitle(), blog.getOwner().getId(), blog.getOwner().getUsername());
+    }
+
+    @Override
+    @Transactional
+    public List<BlogDTO> getAllBlogs() {
+        return blogRepository.findAll()
+                .stream()
+                .map(blog -> new BlogDTO(blog.getId(), blog.getTitle(), blog.getOwner().getId(), blog.getOwner().getUsername()))
+                .toList();
     }
 }

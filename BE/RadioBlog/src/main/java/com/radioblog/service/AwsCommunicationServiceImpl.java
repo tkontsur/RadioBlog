@@ -2,6 +2,8 @@ package com.radioblog.service;
 
 import com.radioblog.entity.BlogPost;
 import com.radioblog.repository.BlogPostsRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -20,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 public class AwsCommunicationServiceImpl implements AwsCommunicationService {
     private final PollyClient pollyClient;
     private final BlogPostsRepository blogPostsRepository;
+    private final Logger logger = LoggerFactory.getLogger(AwsCommunicationServiceImpl.class);
 
     @Value("${aws.s3.output.bucket}")
     private String outputBucket;
@@ -36,7 +39,8 @@ public class AwsCommunicationServiceImpl implements AwsCommunicationService {
     @Async
     public CompletableFuture<StartSpeechSynthesisTaskResponse> enqueueMp3FileGeneration(long blogPostId) {
         BlogPost blogPost = blogPostsRepository.findById(blogPostId).orElseThrow();
-        String s3Key = "blog-" + blogPost.getBlog().getId() + "/post-" + blogPost.getId() + "-";
+        logger.debug("Generating MP3 file for blog post {}: {}", blogPostId, blogPost.getTitle());
+        String s3Key = "blog-" + blogPost.getBlog().getId() + "/post-" + blogPost.getId();
 
         StartSpeechSynthesisTaskRequest.Builder synthesizeSpeechRequest = StartSpeechSynthesisTaskRequest.builder()
                 .text(blogPost.getTitle() + ". " + blogPost.getContent())
@@ -52,8 +56,10 @@ public class AwsCommunicationServiceImpl implements AwsCommunicationService {
         }
 
         StartSpeechSynthesisTaskResponse request = pollyClient.startSpeechSynthesisTask(synthesizeSpeechRequest.build());
+        logger.debug("Generation started for blog post {}: {}", blogPostId, request.synthesisTask().outputUri());
         blogPost.setMp3Url(request.synthesisTask().outputUri());
         blogPostsRepository.save(blogPost);
+        logger.debug("MP3 URL saved for blog post {}: {}", blogPostId, blogPost.getMp3Url());
         return CompletableFuture.completedFuture(request);
     }
 }

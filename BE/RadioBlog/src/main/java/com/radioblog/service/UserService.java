@@ -12,4 +12,8 @@ public interface UserService {
     void saveUser(User newUser);
 
     UserDTO login(LoginUserDTO userDTO, HttpServletRequest request, HttpServletResponse response);
+
+    User getCurrentUser();
+
+    UserDTO getCurrentUserDTO();
 }

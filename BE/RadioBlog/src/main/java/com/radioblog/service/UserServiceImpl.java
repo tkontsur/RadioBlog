@@ -80,4 +80,21 @@ public class UserServiceImpl implements UserService {
 
         return null;
     }
+
+    @Override
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof User user) {
+            return user;
+        }
+
+        throw new ResponseStatusException(HttpStatusCode.valueOf(401), "User is not authenticated");
+    }
+
+    @Override
+    public UserDTO getCurrentUserDTO() {
+        User user = getCurrentUser();
+        return new UserDTO(user.getId(), user.getUsername(), user.getRole().toString());
+    }
 }

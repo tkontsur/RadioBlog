@@ -20,14 +20,15 @@ class BlogServiceImplTest extends BaseSpringTest {
     @BeforeEach
     public void setUp() {
         user = new User()
-                .setUsername("test")
+                .setUsername("test" + System.currentTimeMillis())
+                .setPassword("test")
                 .setRole(User.Role.USER);
         userRepository.save(user);
     }
 
     @Test
     public void createBlog() {
-        BlogDTO blogDTO = new BlogDTO(0, "test", user.getId());
+        BlogDTO blogDTO = new BlogDTO(0, "test", user.getId(), user.getUsername());
         BlogDTO createdBlog = blogService.upsertBlog(blogDTO);
 
         assertNotNull(createdBlog);
@@ -44,11 +45,11 @@ class BlogServiceImplTest extends BaseSpringTest {
 
     @Test
     public void editBlog() {
-        BlogDTO blogDTO = new BlogDTO(0, "test", user.getId());
+        BlogDTO blogDTO = new BlogDTO(0, "test", user.getId(), user.getUsername());
         BlogDTO createdBlog = blogService.upsertBlog(blogDTO);
         assertNotNull(createdBlog);
 
-        BlogDTO editedBlog = new BlogDTO(createdBlog.id(), "edited", user.getId());
+        BlogDTO editedBlog = new BlogDTO(createdBlog.id(), "edited", user.getId(), user.getUsername());
         BlogDTO updatedBlog = blogService.upsertBlog(editedBlog);
         assertEquals(updatedBlog.id(), createdBlog.id());
         assertEquals(updatedBlog.title(),
@@ -57,10 +58,10 @@ class BlogServiceImplTest extends BaseSpringTest {
 
     @Test
     public void createBlogWithInvalidOwnerId() {
-        BlogDTO blogDTO = new BlogDTO(0, "test", user.getId());
+        BlogDTO blogDTO = new BlogDTO(0, "test", user.getId(), user.getUsername());
         blogService.upsertBlog(blogDTO);
 
         assertThrows(IllegalArgumentException.class,
-                () -> blogService.upsertBlog(new BlogDTO(0, blogDTO.title(), blogDTO.ownerId())));
+                () -> blogService.upsertBlog(new BlogDTO(0, blogDTO.title(), blogDTO.ownerId(), blogDTO.ownerName())));
     }
 }

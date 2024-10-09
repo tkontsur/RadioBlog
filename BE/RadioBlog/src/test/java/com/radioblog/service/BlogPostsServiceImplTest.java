@@ -5,7 +5,6 @@ import com.radioblog.entity.Blog;
 import com.radioblog.entity.BlogPost;
 import com.radioblog.entity.User;
 import com.radioblog.repository.BlogPostsRepository;
-import com.radioblog.repository.BlogRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +22,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class BlogPostsServiceImplTest {
     @Mock
-    private BlogRepository blogRepository;
+    private UserService userService;
     @Mock
     private BlogPostsRepository blogPostsRepository;
     @Mock
@@ -31,21 +30,24 @@ class BlogPostsServiceImplTest {
     @InjectMocks
     private BlogPostsServiceImpl blogPostsService;
     private Blog blog;
+    private User user;
 
     @BeforeEach
     public void setUp() {
-        User user = new User()
+        user = new User()
                 .setUsername("test")
                 .setRole(User.Role.AUTHOR);
         blog = new Blog().setTitle("test").setOwner(user).setId(1L);
-        when(blogRepository.findById(1L)).thenReturn(Optional.of(blog));
-        when(blogPostsRepository.save(ArgumentMatchers.any(BlogPost.class)))
-                .thenAnswer(invocation -> ((BlogPost)invocation.getArgument(0)).setId(1L));
+        user.setBlog(blog);
+        when(userService.getCurrentUser()).thenReturn(user);
     }
 
     @Test
     public void createPost() {
-        BlogPostDTO blogPostDTO = new BlogPostDTO(0, "test", "test", null, blog.getId());
+        when(blogPostsRepository.save(ArgumentMatchers.any(BlogPost.class)))
+                .thenAnswer(invocation -> ((BlogPost)invocation.getArgument(0)).setId(1L));
+
+        BlogPostDTO blogPostDTO = new BlogPostDTO(0, "test", "test", null, 0);
         BlogPostDTO createdPost = blogPostsService.upsertPost(blogPostDTO);
 
         assertNotNull(createdPost);
@@ -57,6 +59,8 @@ class BlogPostsServiceImplTest {
 
     @Test
     public void editPost() {
+        when(blogPostsRepository.save(ArgumentMatchers.any(BlogPost.class)))
+                .thenAnswer(invocation -> ((BlogPost)invocation.getArgument(0)).setId(1L));
         when(blogPostsRepository.findById(1L))
                 .thenReturn(Optional.of(new BlogPost().setTitle("test").setContent("test").setBlog(blog).setId(1L)));
 
@@ -65,5 +69,20 @@ class BlogPostsServiceImplTest {
 
         assertEquals("test edited", updatedPost.title());
         assertEquals("test edited", updatedPost.content());
+    }
+
+    @Test
+    public void createPostForUserWithoutBlog() {
+        user.setBlog(null);
+        when(userService.getCurrentUser()).thenReturn(user);
+
+        BlogPostDTO blogPostDTO = new BlogPostDTO(0, "test", "test", null, 0);
+        assertThrows(IllegalArgumentException.class, () -> blogPostsService.upsertPost(blogPostDTO));
+    }
+
+    @Test
+    public void createPostForDifferentBlog() {
+        BlogPostDTO blogPostDTO = new BlogPostDTO(0, "test", "test", null, blog.getId() + 1);
+        assertThrows(IllegalArgumentException.class, () -> blogPostsService.upsertPost(blogPostDTO));
     }
 }
